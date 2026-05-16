@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:quizapp/main.dart';
+import 'package:quizapp/quiz.dart';
 
 class Result extends StatelessWidget {
   final int totalQuestions;
@@ -7,7 +9,8 @@ class Result extends StatelessWidget {
   final Color totalQuestioncolor;
   final Color correctanswercolor;
 
-  Result({
+  const Result({
+    super.key,
     required this.totalQuestions,
     required this.correctanswer,
     required this.percentageScore,
@@ -17,67 +20,171 @@ class Result extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isPassed = percentageScore >= 50;
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          AlertDialog(
-            backgroundColor: Colors.white,
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
+      body: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [kBackgroundColor, kSurfaceColor],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("CONGRATULATIONS"),
-                SizedBox(height: 10),
+                const Spacer(),
+                // Achievement Badge/Icon
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: (isPassed ? kSuccessColor : kErrorColor).withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isPassed ? Icons.emoji_events : Icons.sentiment_very_dissatisfied,
+                    size: 80,
+                    color: isPassed ? kAccentColor : kErrorColor,
+                  ),
+                ),
+                const SizedBox(height: 30),
                 Text(
-                  '${percentageScore.toStringAsFixed(2)}%score',
-                  style: TextStyle(
+                  isPassed ? "CONGRATULATIONS!" : "KEEP PRACTICING!",
+                  style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Colors.red,
+                    letterSpacing: 2,
+                    color: Colors.white,
                   ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Text(
-                  'Quiz COMPLETED SUCCESSFULLY!',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.normal,
-                    color: Colors.black,
+                  isPassed ? "You've mastered this quiz." : "You're getting there!",
+                  style: const TextStyle(color: kTextSecondary, fontSize: 16),
+                ),
+                const Spacer(),
+                // Score Circle
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: 180,
+                      height: 180,
+                      child: CircularProgressIndicator(
+                        value: percentageScore / 100,
+                        strokeWidth: 12,
+                        backgroundColor: Colors.white10,
+                        valueColor: AlwaysStoppedAnimation<Color>(isPassed ? kSuccessColor : kErrorColor),
+                      ),
+                    ),
+                    Column(
+                      children: [
+                        Text(
+                          "${percentageScore.toInt()}%",
+                          style: const TextStyle(
+                            fontSize: 48,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const Text(
+                          "SCORE",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: kTextSecondary,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                // Stats Card
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: kSurfaceColor,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildStatItem("TOTAL", totalQuestions.toString(), kTextSecondary),
+                      Container(width: 1, height: 40, color: Colors.white10),
+                      _buildStatItem("CORRECT", correctanswer.toString(), kSuccessColor),
+                      Container(width: 1, height: 40, color: Colors.white10),
+                      _buildStatItem("WRONG", (totalQuestions - correctanswer).toString(), kErrorColor),
+                    ],
                   ),
                 ),
-                SizedBox(height: 10),
-                Text(
-                  'YOU ATTEMPTED $totalQuestions questions.',
-                  style: TextStyle(fontSize: 18, color: totalQuestioncolor),
+                const SizedBox(height: 40),
+                // Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => const Quiz()),
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          side: const BorderSide(color: kPrimaryColor),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: const Text("TRY AGAIN", style: TextStyle(color: kPrimaryColor, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).popUntil((route) => route.isFirst);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kPrimaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 0,
+                        ),
+                        child: const Text("HOME", style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  '$correctanswer answer are correct.',
-                  style: TextStyle(fontSize: 18, color: correctanswercolor),
-                ),
+                const Spacer(),
               ],
             ),
           ),
-          SizedBox(height: 15),
-          MaterialButton(
-            onPressed: () {
-              if (percentageScore < 50) {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-              } else {
-                Navigator.of(context).pop();
-              }
-            },
-            child: Text(
-              percentageScore < 50 ? 'TRY AGAIN...!' : 'BACK...!',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-            ),
-            height: 75,minWidth: 180,shape:RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),color: percentageScore<50 ? Colors.red : Colors.green ,textColor: Colors.white,
-          ),
-        ],
+        ),
       ),
     );
   }
+
+  Widget _buildStatItem(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 10, color: kTextSecondary, letterSpacing: 1),
+        ),
+      ],
+    );
+  }
 }
+
